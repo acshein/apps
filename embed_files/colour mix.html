@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎨 Magic Colour Mixer! 🎨</title>
+    <style>
+        :root {
+            --bg-color: #f0fdf4;
+        }
+        
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            user-select: none;
+            overflow-x: hidden;
+        }
+
+        h1 {
+            color: #ff4757;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px #fffa65;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .instructions {
+            font-size: 1.3rem;
+            color: #2f3542;
+            margin-bottom: 25px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* Paint Palette Layout */
+        .palette-container {
+            background: white;
+            padding: 20px;
+            border-radius: 30px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .section-label {
+            font-size: 1.1rem;
+            color: #747d8c;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .palette {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        /* Big Tap-friendly Splats */
+        .paint-splat {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 6px solid #fff;
+            box-shadow: 0 6px 10px rgba(0,0,0,0.15);
+            cursor: pointer;
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+            position: relative;
+        }
+
+        .paint-splat:active {
+            transform: scale(0.9);
+        }
+
+        .paint-splat::after {
+            content: '';
+            position: absolute;
+            top: 10%;
+            left: 15%;
+            width: 25%;
+            height: 25%;
+            background: rgba(255,255,255,0.4);
+            border-radius: 50%;
+        }
+
+        /* The Magic Lab Cauldron */
+        .mixing-lab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .slots {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .slot {
+            width: 80px;
+            height: 80px;
+            border: 5px dashed #ced6e0;
+            border-radius: 50%;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: #ced6e0;
+            box-shadow: inset 0 4px 6px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+        .slot.filled {
+            border-style: solid;
+            border-color: #fff;
+            box-shadow: 0 6px 10px rgba(0,0,0,0.15);
+        }
+
+        .plus-sign {
+            font-size: 2.5rem;
+            color: #747d8c;
+            font-weight: bold;
+        }
+
+        /* Result Splash */
+        .cauldron {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            border: 8px solid #2f3542;
+            background: #e4e7eb;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+            transition: background-color 0.5s ease, transform 0.2s ease;
+            position: relative;
+        }
+
+        .cauldron.shake {
+            animation: shakeAnimation 0.5s ease-in-out;
+        }
+
+        @keyframes shakeAnimation {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            20% { transform: translate(-10px, 4px) rotate(-5deg); }
+            40% { transform: translate(10px, -4px) rotate(5deg); }
+            60% { transform: translate(-8px, 2px) rotate(-3deg); }
+            80% { transform: translate(6px, -2px) rotate(3deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+
+        .color-name {
+            font-size: 1.6rem;
+            color: #fff;
+            font-weight: bold;
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.6);
+            text-align: center;
+            padding: 5px 10px;
+            border-radius: 10px;
+        }
+
+        /* Action Buttons */
+        .btn-clear {
+            background-color: #ff4757;
+            color: white;
+            border: none;
+            padding: 15px 35px;
+            font-size: 1.4rem;
+            font-family: inherit;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 14px rgba(255, 61, 0, 0.3);
+            transition: all 0.2s;
+        }
+
+        .btn-clear:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 5px rgba(255, 61, 0, 0.3);
+        }
+
+        /* Sparkle Effects */
+        .sparkle {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background: #fff;
+            border-radius: 50%;
+            animation: flash 0.6s ease-out infinite alternate;
+            pointer-events: none;
+        }
+
+        @keyframes flash {
+            0% { transform: scale(0.3); opacity: 0.2; }
+            100% { transform: scale(1.2); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🎨 Magic Colour Mixer! 🎨</h1>
+    <div class="instructions" id="instruction-text">Tap 2 colours to mix them up!</div>
+
+    <div class="palette-container">
+        <div class="section-label">Pick Your Colours</div>
+        <div class="palette">
+            <div class="paint-splat" style="background-color: #ff3838;" data-color="Red"></div>
+            <div class="paint-splat" style="background-color: #ffb8b8;" data-color="Pink"></div>
+            <div class="paint-splat" style="background-color: #ff9f43;" data-color="Orange"></div>
+            <div class="paint-splat" style="background-color: #fff200;" data-color="Yellow"></div>
+            <div class="paint-splat" style="background-color: #2ed573;" data-color="Green"></div>
+            <div class="paint-splat" style="background-color: #1e90ff;" data-color="Blue"></div>
+            <div class="paint-splat" style="background-color: #ffffff; border-color: #ced6e0;" data-color="White"></div>
+            <div class="paint-splat" style="background-color: #2f3542;" data-color="Black"></div>
+        </div>
+    </div>
+
+    <div class="mixing-lab">
+        <div class="slots">
+            <div class="slot" id="slot1">?</div>
+            <div class="plus-sign">+</div>
+            <div class="slot" id="slot2">?</div>
+        </div>
+
+        <div class="section-label">Your Magic Mix</div>
+        <div class="cauldron" id="cauldron">
+            <div class="color-name" id="mix-name">Empty</div>
+        </div>
+    </div>
+
+    <button class="btn-clear" id="clear-btn">💥 Reset 💥</button>
+
+    <script>
+        // Color Mixing Dictionary Matrix (Intuitive Paint Mixing)
+        const mixRules = {
+            'Red+Yellow': { hex: '#ff9f43', name: 'Orange 🍊' },
+            'Yellow+Red': { hex: '#ff9f43', name: 'Orange 🍊' },
+            'Red+Blue': { hex: '#9b59b6', name: 'Purple 🍇' },
+            'Blue+Red': { hex: '#9b59b6', name: 'Purple 🍇' },
+            'Blue+Yellow': { hex: '#2ed573', name: 'Green 🌳' },
+            'Yellow+Blue': { hex: '#2ed573', name: 'Green 🌳' },
+            'Red+White': { hex: '#ffb8b8', name: 'Pink 🌸' },
+            'White+Red': { hex: '#ffb8b8', name: 'Pink 🌸' },
+            'Black+White': { hex: '#a4b0be', name: 'Grey 🐨' },
+            'White+Black': { hex: '#a4b0be', name: 'Grey 🐨' },
+            'Blue+White': { hex: '#74b9ff', name: 'Light Blue 💎' },
+            'White+Blue': { hex: '#74b9ff', name: 'Light Blue 💎' },
+            'Green+White': { hex: '#55efc4', name: 'Light Green 🍃' },
+            'White+Green': { hex: '#55efc4', name: 'Light Green 🍃' },
+            'Orange+White': { hex: '#ffeaa7', name: 'Peach 🍑' },
+            'White+Orange': { hex: '#ffeaa7', name: 'Peach 🍑' },
+            'Red+Black': { hex: '#8b0000', name: 'Dark Red 🥀' },
+            'Black+Red': { hex: '#8b0000', name: 'Dark Red 🥀' },
+            'Blue+Black': { hex: '#0a3d62', name: 'Dark Blue 🌌' },
+            'Black+Blue': { hex: '#0a3d62', name: 'Dark Blue 🌌' },
+            'Yellow+Black': { hex: '#b89200', name: 'Olive Green 🫒' },
+            'Black+Yellow': { hex: '#b89200', name: 'Olive Green 🫒' },
+            'Green+Red': { hex: '#8b5a2b', name: 'Brown 🪵' },
+            'Red+Green': { hex: '#8b5a2b', name: 'Brown 🪵' },
+            'Orange+Blue': { hex: '#6f5643', name: 'Brown 🪵' },
+            'Blue+Orange': { hex: '#6f5643', name: 'Brown 🪵' },
+            'Pink+Blue': { hex: '#d6a2e8', name: 'Lavender 🪻' },
+            'Blue+Pink': { hex: '#d6a2e8', name: 'Lavender 🪻' }
+        };
+
+        // HEX codes mapping for individual colors
+        const colorHexMap = {
+            'Red': '#ff3838', 'Pink': '#ffb8b8', 'Orange': '#ff9f43',
+            'Yellow': '#fff200', 'Green': '#2ed573', 'Blue': '#1e90ff',
+            'White': '#ffffff', 'Black': '#2f3542'
+        };
+
+        let selectedColors = [];
+
+        const splats = document.querySelectorAll('.paint-splat');
+        const slot1 = document.getElementById('slot1');
+        const slot2 = document.getElementById('slot2');
+        const cauldron = document.getElementById('cauldron');
+        const mixName = document.getElementById('mix-name');
+        const clearBtn = document.getElementById('clear-btn');
+        const instructionText = document.getElementById('instruction-text');
+
+        // Play built-in sound effects (using web audio API synth so no external dependencies fail)
+        function playTone(freq, type, duration) {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + duration);
+            } catch(e) { console.log("Audio not supported yet") }
+        }
+
+        splats.forEach(splat => {
+            splat.addEventListener('click', () => {
+                const color = splat.getAttribute('data-color');
+                
+                if (selectedColors.length < 2) {
+                    selectedColors.push(color);
+                    playTone(300 + (selectedColors.length * 150), 'sine', 0.15);
+                    updateSlots();
+                }
+
+                if (selectedColors.length === 2) {
+                    mixColors();
+                }
+            });
+        });
+
+        function updateSlots() {
+            if (selectedColors[0]) {
+                slot1.style.backgroundColor = colorHexMap[selectedColors[0]];
+                slot1.textContent = '';
+                slot1.classList.add('filled');
+                instructionText.textContent = "Great! Choose one more color!";
+            } else {
+                slot1.style.backgroundColor = '#fff';
+                slot1.textContent = '?';
+                slot1.classList.remove('filled');
+            }
+
+            if (selectedColors[1]) {
+                slot2.style.backgroundColor = colorHexMap[selectedColors[1]];
+                slot2.textContent = '';
+                slot2.classList.add('filled');
+            } else {
+                slot2.style.backgroundColor = '#fff';
+                slot2.textContent = '?';
+                slot2.classList.remove('filled');
+            }
+        }
+
+        function mixColors() {
+            const pair = `${selectedColors[0]}+${selectedColors[1]}`;
+            cauldron.classList.add('shake');
+            instructionText.textContent = "Abracadabra... Look!";
+            
+            // Play magical mix sound
+            playTone(600, 'triangle', 0.1);
+            setTimeout(() => playTone(800, 'triangle', 0.1), 100);
+            setTimeout(() => playTone(1200, 'sine', 0.4), 200);
+
+            setTimeout(() => {
+                cauldron.classList.remove('shake');
+                
+                if (selectedColors[0] === selectedColors[1]) {
+                    // Same colors mixed
+                    const name = selectedColors[0];
+                    cauldron.style.backgroundColor = colorHexMap[name];
+                    mixName.textContent = name + "!";
+                } else if (mixRules[pair]) {
+                    // Known blend
+                    cauldron.style.backgroundColor = mixRules[pair].hex;
+                    mixName.textContent = mixRules[pair].name;
+                } else {
+                    // Default fallback for crazy multi-mixes (like Pink + Orange)
+                    cauldron.style.backgroundColor = '#8f8f8f';
+                    mixName.textContent = 'Muddy Brown! 🪵';
+                }
+                
+                // Dark text adjustment for White/Yellow mixes
+                const currentBg = cauldron.style.backgroundColor;
+                if(currentBg === 'rgb(255, 255, 255)' || selectedColors.includes('White') && selectedColors.includes('Yellow')) {
+                    mixName.style.color = '#2f3542';
+                    mixName.style.textShadow = 'none';
+                } else {
+                    mixName.style.color = '#fff';
+                    mixName.style.textShadow = '1px 1px 4px rgba(0,0,0,0.6)';
+                }
+
+                addSparkles();
+            }, 500);
+        }
+
+        function addSparkles() {
+            for (let i = 0; i < 6; i++) {
+                const sparkle = document.createElement('div');
+                sparkle.classList.add('sparkle');
+                sparkle.style.left = Math.random() * 80 + 10 + '%';
+                sparkle.style.top = Math.random() * 80 + 10 + '%';
+                cauldron.appendChild(sparkle);
+                setTimeout(() => sparkle.remove(), 1200);
+            }
+        }
+
+        function resetApp() {
+            selectedColors = [];
+            updateSlots();
+            cauldron.style.backgroundColor = '#e4e7eb';
+            mixName.textContent = 'Empty';
+            mixName.style.color = '#747d8c';
+            mixName.style.textShadow = 'none';
+            instructionText.textContent = "Tap 2 colours to mix them up!";
+            playTone(150, 'sawtooth', 0.2);
+        }
+
+        clearBtn.addEventListener('click', resetApp);
+    </script>
+</body>
+</html>
