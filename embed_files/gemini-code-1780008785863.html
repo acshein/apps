@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hungry Henry's Pizza Party</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+            background-color: #fffae6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        h1 {
+            color: #e65c00;
+            margin-bottom: 5px;
+            font-size: 2rem;
+            text-shadow: 2px 2px #fff;
+        }
+
+        #game-container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            border: 8px solid #ffcc00;
+            border-radius: 30px;
+            padding: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            text-align: center;
+            position: relative;
+        }
+
+        #monster-bubble {
+            background: #e6f7ff;
+            border: 4px solid #1890ff;
+            border-radius: 20px;
+            padding: 15px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #0050b3;
+            margin-bottom: 20px;
+            position: relative;
+            animation: bounce 2s infinite;
+        }
+
+        #monster-container {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 30px;
+            align-items: center;
+            min-height: 220px;
+        }
+
+        .monster {
+            font-size: 100px;
+            transition: transform 0.2s;
+        }
+
+        .monster.eating {
+            animation: chew 0.5s infinite;
+        }
+
+        /* Pizza Plate / Drop Zone */
+        #plate {
+            width: 180px;
+            height: 180px;
+            background: #e0e0e0;
+            border: 6px dashed #999;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #666;
+            position: relative;
+        }
+
+        /* Pizza Assembly Area */
+        #pizza-source {
+            width: 220px;
+            height: 220px;
+            position: relative;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .slice {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            top: 10px;
+            left: 10px;
+            transform-origin: bottom right;
+            cursor: grab;
+            transition: filter 0.2s;
+        }
+
+        .slice:active {
+            cursor: grabbing;
+        }
+
+        /* Pizza Visuals using SVG */
+        .pizza-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        #button-container {
+            margin-top: 25px;
+        }
+
+        .btn {
+            background-color: #52c41a;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px #389e0d;
+            font-family: inherit;
+        }
+
+        .btn:active {
+            box-shadow: 0 2px #389e0d;
+            transform: translateY(4px);
+        }
+
+        #score-board {
+            font-size: 1.2rem;
+            color: #666;
+            margin-top: 15px;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        @keyframes chew {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1) rotate(5deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Hungry Henry's Pizza Party! 🍕</h1>
+    
+    <div id="game-container">
+        <div id="monster-bubble" id="instruction">Loading...</div>
+        
+        <div id="monster-container">
+            <!-- Henry the Monster -->
+            <div id="henry" class="monster">👹</div>
+            
+            <!-- Henry's Plate (Drop Zone) -->
+            <div id="plate" id="drop-zone">
+                Drop Pizza Here
+            </div>
+        </div>
+
+        <!-- The Whole Pizza Box -->
+        <div id="pizza-source"></div>
+
+        <div id="button-container">
+            <button class="btn" onclick="checkAnswer()">Feed Henry! 😋</button>
+        </div>
+
+        <div id="score-board">Stars: <span id="stars">⭐⭐⭐</span></div>
+    </div>
+
+<script>
+    // Game State
+    const levels = [
+        { slices: 2, target: 1, text: "I want HALF of the pizza! (1 slice)" },
+        { slices: 4, target: 1, text: "I want A QUARTER of the pizza! (1 slice)" },
+        { slices: 4, target: 2, text: "I want HALF of the pizza! (2 slices)" },
+        { slices: 2, target: 2, text: "I want the WHOLE pizza! (2 slices)" }
+    ];
+    
+    let currentLevel = 0;
+    let score = 0;
+    let slicesOnPlate = 0;
+
+    const instructionEl = document.getElementById('monster-bubble');
+    const pizzaSource = document.getElementById('pizza-source');
+    const plate = document.getElementById('plate');
+    const henry = document.getElementById('henry');
+    const starsEl = document.getElementById('stars');
+
+    // Simple Audio Generator (No external assets needed!)
+    function playSound(type) {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        if (type === 'correct') {
+            osc.frequency.setValueAtTime(400, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.3, ctx.currentTime);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.3);
+        } else if (type === 'wrong') {
+            osc.frequency.setValueAtTime(250, ctx.currentTime);
+            osc.frequency.linearRampToValueAtTime(150, ctx.currentTime + 0.4);
+            gain.gain.setValueAtTime(0.3, ctx.currentTime);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.4);
+        } else if (type === 'drag') {
+            osc.frequency.setValueAtTime(600, ctx.currentTime);
+            gain.gain.setValueAtTime(0.1, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.1);
+        }
+    }
+
+    function initLevel() {
+        const level = levels[currentLevel];
+        instructionEl.innerText = level.text;
+        pizzaSource.innerHTML = '';
+        slicesOnPlate = 0;
+        plate.innerHTML = "Henry's Plate";
+        henry.innerText = "👹";
+        
+        const totalSlices = level.slices;
+        const anglePerSlice = 360 / totalSlices;
+
+        // Generate SVG Pizza Slices dynamically
+        for (let i = 0; i < totalSlices; i++) {
+            const sliceContainer = document.createElement('div');
+            sliceContainer.className = 'slice';
+            // Arrange them into a perfect circle initially
+            sliceContainer.style.transform = `rotate(${i * anglePerSlice}deg)`;
+            sliceContainer.setAttribute('draggable', 'true');
+            sliceContainer.dataset.index = i;
+
+            // Simple SVG styling for yummy looking pizza
+            sliceContainer.innerHTML = `
+                <svg class="pizza-svg" viewBox="0 0 100 100">
+                    <path d="M 100 100 L 100 0 A 100 100 0 0 0 ${100 - 100 * Math.sin(anglePerSlice * Math.PI / 180)} ${100 - 100 * Math.cos(anglePerSlice * Math.PI / 180)} Z" 
+                          fill="#facc15" stroke="#b45309" stroke-width="4"/>
+                    <!-- Crust -->
+                    <path d="M 100 0 A 100 100 0 0 0 ${100 - 100 * Math.sin(anglePerSlice * Math.PI / 180)} ${100 - 100 * Math.cos(anglePerSlice * Math.PI / 180)}" 
+                          fill="none" stroke="#92400e" stroke-width="12"/>
+                    <!-- Pepperonis -->
+                    <circle cx="75" cy="45" r="7" fill="#dc2626"/>
+                    <circle cx="50" cy="75" r="7" fill="#dc2626"/>
+                </svg>
+            `;
+
+            // Drag and Drop Logic
+            sliceContainer.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', i);
+                playSound('drag');
+            });
+
+            pizzaSource.appendChild(sliceContainer);
+        }
+    }
+
+    // Allow dropping onto the plate
+    plate.addEventListener('dragover', (e) => {
+        e.preventDefault();
+    });
+
+    plate.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const index = e.dataTransfer.getData('text/plain');
+        const slice = document.querySelector(`[data-index="${index}"]`);
+        
+        if (slice && !plate.contains(slice)) {
+            slicesOnPlate++;
+            playSound('drag');
+            // Hide the slice from the source box to simulate moving it to the plate
+            slice.style.visibility = 'hidden';
+            plate.innerHTML = `🍕 Items on plate: ${slicesOnPlate}`;
+        }
+    });
+
+    function checkAnswer() {
+        const level = levels[currentLevel];
+        
+        if (slicesOnPlate === level.target) {
+            // Correct Answer!
+            playSound('correct');
+            henry.innerText = "😋";
+            henry.classList.add('eating');
+            instructionEl.innerText = "YUMMY! Thank you! 🎉";
+            score++;
+            
+            starsEl.innerText = "⭐".repeat(score) + " Wait...";
+
+            setTimeout(() => {
+                henry.classList.remove('eating');
+                currentLevel = (currentLevel + 1) % levels.length;
+                if (score > 4) score = 4;
+                starsEl.innerText = "⭐".repeat(score);
+                initLevel();
+            }, 2000);
+
+        } else {
+            // Wrong Answer
+            playSound('wrong');
+            henry.innerText = "😢";
+            instructionEl.innerText = "Oh no, that's not what I asked for! Try again!";
+            
+            setTimeout(() => {
+                initLevel();
+            }, 2000);
+        }
+    }
+
+    // Start the game
+    initLevel();
+</script>
+</body>
+</html>
