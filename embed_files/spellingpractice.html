@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spelling Superstar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-b from-sky-200 to-yellow-100 flex items-center justify-center p-6">
+
+  <div class="bg-white shadow-2xl rounded-3xl p-8 max-w-xl w-full text-center border-4 border-yellow-300">
+    <h1 class="text-4xl font-bold text-blue-600 mb-4">
+      ✏️ Spelling Superstar
+    </h1>
+
+    <p class="text-lg text-gray-700 mb-6">
+      Listen to the word and type the correct spelling.
+    </p>
+
+    <div class="flex justify-center gap-4 mb-6 flex-wrap">
+      <button
+        onclick="hearWord()"
+        class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-2xl shadow-lg text-lg"
+      >
+        🔊 Hear Word
+      </button>
+
+      <button
+        onclick="toggleWord()"
+        class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-2xl shadow-lg text-lg"
+      >
+        👀 Show/Hide Word
+      </button>
+    </div>
+
+    <div id="wordDisplay" class="text-3xl font-bold text-purple-700 mb-4 hidden"></div>
+
+    <input
+      type="text"
+      id="spellingInput"
+      placeholder="Type the spelling here"
+      class="w-full border-4 border-blue-300 rounded-2xl p-4 text-2xl text-center mb-6 focus:outline-none focus:border-blue-500"
+    />
+
+    <div class="flex justify-center gap-4 mb-6 flex-wrap">
+      <button
+        onclick="checkSpelling()"
+        class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-2xl shadow-lg text-lg"
+      >
+        ✅ Check
+      </button>
+
+      <button
+        onclick="nextWord()"
+        class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-2xl shadow-lg text-lg"
+      >
+        ➡️ Next Word
+      </button>
+    </div>
+
+    <div id="message" class="text-xl font-semibold mb-4 text-gray-800"></div>
+
+    <div class="bg-yellow-100 border-2 border-yellow-300 rounded-2xl p-4 text-2xl font-bold text-yellow-700">
+      ⭐ Score: <span id="score">0</span>
+    </div>
+
+    <div class="mt-6 text-sm text-gray-500">
+      Word <span id="wordNumber">1</span> of <span id="totalWords"></span>
+    </div>
+  </div>
+
+  <script>
+    const spellingWords = [
+      "because",
+      "friend",
+      "beautiful",
+      "through",
+      "school",
+      "different",
+      "important",
+      "animal",
+      "adventure",
+      "recycle"
+    ];
+
+    let currentWord = 0;
+    let score = 0;
+    let showWord = false;
+
+    document.getElementById("totalWords").textContent = spellingWords.length;
+
+    function hearWord() {
+      const utterance = new SpeechSynthesisUtterance(spellingWords[currentWord]);
+      utterance.rate = 0.8;
+      speechSynthesis.speak(utterance);
+    }
+
+    function toggleWord() {
+      showWord = !showWord;
+      const wordDisplay = document.getElementById("wordDisplay");
+
+      if (showWord) {
+        wordDisplay.textContent = spellingWords[currentWord];
+        wordDisplay.classList.remove("hidden");
+      } else {
+        wordDisplay.classList.add("hidden");
+      }
+    }
+
+    function checkSpelling() {
+      const input = document.getElementById("spellingInput").value.trim().toLowerCase();
+      const message = document.getElementById("message");
+
+      if (input === spellingWords[currentWord]) {
+        message.textContent = "🎉 Great job! That's correct!";
+        score++;
+        document.getElementById("score").textContent = score;
+      } else {
+        message.textContent = `❌ Oops! The correct spelling is '${spellingWords[currentWord]}'.`;
+      }
+    }
+
+    function nextWord() {
+      currentWord = (currentWord + 1) % spellingWords.length;
+
+      document.getElementById("spellingInput").value = "";
+      document.getElementById("message").textContent = "";
+      document.getElementById("wordNumber").textContent = currentWord + 1;
+
+      if (showWord) {
+        document.getElementById("wordDisplay").textContent = spellingWords[currentWord];
+      }
+    }
+  </script>
+</body>
+</html>
